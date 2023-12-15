@@ -1,88 +1,113 @@
 package fr.efrei.server.web.rest;
 
 import fr.efrei.server.domain.Student;
-import fr.efrei.server.service.StudentService;
+import fr.efrei.server.repository.StudentRepository;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PathVariable;
-
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api")
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest
+@TestPropertySource(
+        locations = "classpath:application-test.properties")
 public class StudentResource {
 
-    public final StudentService studentService;
+    @Autowired
+    private StudentRepository studentRepository;
 
-    public StudentResource(StudentService studentService) {
-        this.studentService = studentService;
+    // Setting global expectation
+    private int expectedDatabaseSize = 1;
+
+    @Test
+    @Transactional
+    void readStudents() throws Exception {
+
+        // Get the size of the database at the beginning
+        int databaseSize = studentRepository.findAll().size();
+
+        // Testing if the size is correct
+        assertThat(databaseSize).isEqualTo(expectedDatabaseSize);
     }
 
-    // READ-All Controller
-    @GetMapping ("/students")
-    public List<Student> getAllStudents() {
-        return studentService.findAll();
+    @Test
+    @Transactional
+    void readOneStudent() throws Exception {
+
+        // Get the size of the database at the beginning
+        Student studentFound = studentRepository.findById(0).orElse(null);
+
+        // Checking that the student we found is correct
+        assertThat(studentFound.getId()).isEqualTo(0);
+        assertThat(studentFound.getName()).isEqualTo("Matthew");
+        assertThat(studentFound.getAge()).isEqualTo(22);
     }
 
-    // READ student based on ID
-    @GetMapping("/students/{id}")
-    public Student getStudentById(@PathVariable String id) {
+    @Test
+    @Transactional
+    void createStudent() throws Exception {
 
-        Integer parsedId;
+        // Testing if the size of the database before creation is correct
+        int size = studentRepository.findAll().size();
 
-        // Parsing the id into Integer
-        try {
-            // Setting the id
-            parsedId = Integer.parseInt(id);
+        // Creating a student
+        Student newStudent = new Student();
 
-        }catch (NumberFormatException e){
-            // Setting the id by default
-            parsedId = 0;
-        }
+        // Adding its attributes
+        newStudent.setName("Antoine");
+        newStudent.setAge(22);
 
-        // Getting the Student entity in the service
-        Student student = studentService.getStudentById(parsedId);
+        // Saving newStudent in repository (adding its id as the same time)
+        Student createdStudent = studentRepository.save(newStudent);
 
-        return student;
+        // Checking if the database size has changed
+        assertThat(studentRepository.findAll().size()).isEqualTo(size + 1);
+
+        // Checking that the second student is the one we created
+        assertThat(createdStudent.getId()).isEqualTo(1);
+        assertThat(createdStudent.getName()).isEqualTo("Antoine");
+        assertThat(createdStudent.getAge()).isEqualTo(22);
     }
 
-    @GetMapping("/student/create/np/{name}/{age}")
-    public Student createStudentById(@PathVariable String name, @PathVariable Integer age) {
-        // Creating the new student
-        Student student = new Student();
+    @Test
+    @Transactional
+    void updateStudent() throws Exception {
 
-        // Adding its passed-down variables
-        student.setName(name);
-        student.setAge(age);
+        // Get the student
+        Student studentFound = studentRepository.findById(0).orElse(null);
 
-        Student createdStudent = studentService.createStudent(student);
-        return createdStudent;
+        // Changing the name
+        studentFound.setName("Matt");
+        studentFound.setAge(23);
+
+        // Saving into the repository
+        studentRepository.save(studentFound);
+
+        // Get the size of the database after the update
+        Student studentUpdated = studentRepository.findById(0).orElse(null);
+
+        // Checking that the update has been made
+        assertThat(studentUpdated.getName()).isEqualTo("Matt");
+        assertThat(studentUpdated.getAge()).isEqualTo(23);
     }
 
-    // For PUT and DELETE we use a postman web extension to make the queries
-    // UPDATE student base on ID for Name and Age
-    @PutMapping("/student/update/{id}")
-    public Student updateStudent(@PathVariable Integer id, @RequestParam String name, @RequestParam Integer age) {
-        Student student = studentService.updateStudent(id, name, age);
-        return student;
-    }
+    @Test
+    @Transactional
+    void deleteStudent() throws Exception {
 
-    // DELETE student based on ID
-    @DeleteMapping("student/delete/{id}")
-    public String deleteStudent(@PathVariable Integer id){
-        Integer response = studentService.deleteStudent(id);
-        return "done";
+        // Get the student
+        Student studentFound = studentRepository.findById(0).orElse(null);
+
+        // Deleting the Student from the repository
+        studentRepository.delete(studentFound);
+
+        // Testing if the size is correct
+        assertThat(studentRepository.findAll().size()).isEqualTo(expectedDatabaseSize - 1);
     }
 
 }
