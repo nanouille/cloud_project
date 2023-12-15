@@ -2,10 +2,20 @@ package fr.efrei.server.web.rest;
 
 import fr.efrei.server.domain.Student;
 import fr.efrei.server.service.StudentService;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -19,34 +29,80 @@ public class StudentResource {
         this.studentService = studentService;
     }
 
+    // READ-All Controller
     @GetMapping ("/students")
     public List<Student> getAllStudents() {
         return studentService.findAll();
     }
 
+    // READ student based on ID
     @GetMapping("/students/{id}")
-    public Student getStudent(@PathVariable String id) {
-        // Creating the Student entity
-        Student student = new Student();
+    public Student getStudentById(@PathVariable String id) {
 
-        // Setting the id (with Exception-Handling)
+        Integer parsedId;
+
+        // Parsing the id into Integer
         try {
             // Setting the id
-            student.setId(Integer.parseInt(id));
+            parsedId = Integer.parseInt(id);
 
         }catch (NumberFormatException e){
-
-            // Affecting the ID automatically in case
-            student.setId(100);
+            // Setting the id by default
+            parsedId = 0;
         }
 
-        // Setting the name
-        student.setName("Julie");
-
-        // Setting the age
-        student.setAge(23);
+        // Getting the Student entity in the service
+        Student student = studentService.getStudentById(parsedId);
 
         return student;
+    }
+
+    // CREATE student (not persisted - GET request)
+    @GetMapping("/student/create/np/{name}/{age}")
+    public Student createStudentById(@PathVariable String name, @PathVariable Integer age) {
+        // Creating the new student
+        Student student = new Student();
+
+        // Adding its passed-down variables
+        student.setName(name);
+        student.setAge(age);
+
+        Student createdStudent = studentService.createStudent(student);
+        return createdStudent;
+    }
+
+    // CREATE student based on Name, Age (ID auto-incremented)
+    @PostMapping("/student/create")
+    public Student createStudent(@RequestParam String name, @RequestParam Integer age) {
+
+        // Creating the new student
+        Student student = new Student();
+
+        // Adding its passed-down variables
+        student.setName(name);
+        student.setAge(age);
+
+        // Creating the student entity in the service
+        Student createdStudent = studentService.createStudent(student);
+
+        return createdStudent;
+    }
+
+    // UPDATE student base on ID for Name and Age
+    @PutMapping("/student/update/{id}")
+    public Student updateStudent(@PathVariable Integer id, @RequestParam String name, @RequestParam Integer age) {
+        Student student = studentService.updateStudent(id, name, age);
+        return student;
+    }
+
+    // DELETE student based on ID
+    @DeleteMapping("student/delete/{id}")
+    public String deleteStudent(@PathVariable Integer id){
+        Integer response = studentService.deleteStudent(id);
+        if(response==1){
+            return "Student deleted.";
+        }
+        return "Student not found.";
     }
 
 }
