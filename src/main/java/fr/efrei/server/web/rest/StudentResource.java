@@ -57,7 +57,6 @@ public class StudentResource {
         return student;
     }
 
-    // CREATE student (not persisted - GET request)
     @GetMapping("/student/create/np/{name}/{age}")
     public Student createStudentById(@PathVariable String name, @PathVariable Integer age) {
         // Creating the new student
@@ -71,23 +70,7 @@ public class StudentResource {
         return createdStudent;
     }
 
-    // CREATE student based on Name, Age (ID auto-incremented)
-    @PostMapping("/student/create")
-    public Student createStudent(@RequestParam String name, @RequestParam Integer age) {
-
-        // Creating the new student
-        Student student = new Student();
-
-        // Adding its passed-down variables
-        student.setName(name);
-        student.setAge(age);
-
-        // Creating the student entity in the service
-        Student createdStudent = studentService.createStudent(student);
-
-        return createdStudent;
-    }
-
+    // For PUT and DELETE we use a postman web extension to make the queries
     // UPDATE student base on ID for Name and Age
     @PutMapping("/student/update/{id}")
     public Student updateStudent(@PathVariable Integer id, @RequestParam String name, @RequestParam Integer age) {
@@ -99,10 +82,7 @@ public class StudentResource {
     @DeleteMapping("student/delete/{id}")
     public String deleteStudent(@PathVariable Integer id){
         Integer response = studentService.deleteStudent(id);
-        if(response==1){
-            return "Student deleted.";
-        }
-        return "Student not found.";
+        return "done";
     }
 
 }

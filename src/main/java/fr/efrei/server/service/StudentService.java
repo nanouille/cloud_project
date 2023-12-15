@@ -26,18 +26,19 @@ public class StudentService {
         return studentRepository.findById(id).orElse(null);
     }
 
-    // CREATE Service
+    // POST Service
     public Student createStudent(Student student){
         return studentRepository.save(student);
     }
 
-    // UPDATE Service
+    // PUT Service
     public Student updateStudent(Integer id, String name, Integer age){
         // Getting the student
         Student existingStudent = studentRepository.findById(id)
                 .orElse(null);
 
         // Setting the found student
+        // must fill name AND age, doesn't covert the NULL entries
         if(existingStudent!=null) {
             existingStudent.setName(name);
             existingStudent.setAge(age);
