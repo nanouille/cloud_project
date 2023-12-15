@@ -41,10 +41,10 @@ public class StudentResource {
         }
 
         // Setting the name
-        student.setName("Elena");
+        student.setName("Julie");
 
         // Setting the age
-        student.setAge(22);
+        student.setAge(23);
 
         return student;
     }
